@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fatakpay Product Flow Diagrams</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --card: #1a2332;
+      --text: #e7ecf3;
+      --muted: #8b9cb3;
+      --accent: #3b82f6;
+      --border: #2d3a4f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 2rem;
+      line-height: 1.5;
+    }
+    h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+    .subtitle { color: var(--muted); margin-bottom: 2rem; }
+    nav {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    nav a {
+      color: var(--accent);
+      text-decoration: none;
+      margin-right: 1rem;
+      font-size: 0.9rem;
+    }
+    nav a:hover { text-decoration: underline; }
+    section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    section h2 {
+      margin-top: 0;
+      font-size: 1.2rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+    }
+    .mermaid { display: flex; justify-content: center; overflow-x: auto; }
+    .tag {
+      display: inline-block;
+      background: #1e3a5f;
+      color: #93c5fd;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      margin-left: 0.5rem;
+    }
+    @media print {
+      body { background: white; color: black; }
+      section, nav { border: 1px solid #ccc; background: white; }
+      nav { position: static; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Fatakpay Product Flow Diagrams</h1>
+  <p class="subtitle">Production · Card (One Month EMI, DCL, EWA, D&amp;C) + EMI (Lite, Plus, Prime, Udaan) · June 2026</p>
+
+  <nav>
+    <strong>Jump:</strong>
+    <a href="#map">Product map</a>
+    <a href="#stages">Stages</a>
+    <a href="#ome-new">One Month EMI new</a>
+    <a href="#ome-repeat">One Month EMI repeat</a>
+    <a href="#dcl">DCL</a>
+    <a href="#ewa">EWA</a>
+    <a href="#dnc">D&amp;C</a>
+    <a href="#lite">Lite</a>
+    <a href="#plus">Plus</a>
+    <a href="#prime">Prime</a>
+    <a href="#udaan">Udaan</a>
+    <a href="#cross">Card → Udaan</a>
+  </nav>
+
+  <section id="map">
+    <h2>1. Product map <span class="tag">overview</span></h2>
+    <pre class="mermaid">
+flowchart TB
+    subgraph ROOT["Fatakpay Lending"]
+        direction TB
+        subgraph CARD["CARD master_id=1"]
+            OME["One Month EMI - D2C - prod 191"]
+            DCL["DCL - B2B partner - Black Box"]
+            EWA["EWA - B2B salary - attendance"]
+            DNC["D and C - inactive new"]
+        end
+        subgraph EMI["EMI master_id=2"]
+            LITE["FatakLite STPL - 330 343 290"]
+            PLUS["FatakPlus PL - 276 341 336"]
+            PRIME["FatakPrime DSA - 285 221"]
+            UDAAN["FatakUdaan - 323"]
+        end
+    end
+    OME --> OME_M["fatakcard_model"]
+    DCL --> DCL_M["Black Box"]
+    EWA --> EWA_M["ewa_percent x salary"]
+    LITE --> LITE_M["emi_non_banking_model"]
+    PLUS --> PLUS_M["emi_with_banking_model"]
+    PRIME --> PRIME_M["Prime then Plus engine"]
+    UDAAN --> UDAAN_M["Admin config"]
+    </pre>
+  </section>
+
+  <section id="stages">
+    <h2>2. Common application stages</h2>
+    <pre class="mermaid">
+flowchart LR
+    S1["1 Form"] --> S2["2 Docs"]
+    S2 --> S32["32 KYC"]
+    S32 --> S38{"Soft offer?"}
+    S38 -->|fee| SOFT["38 Dummy"]
+    S38 -->|DE| S4["4 Offer"]
+    SOFT --> S4
+    S4 --> S5["5 Accept"]
+    S5 --> S6["6 NACH"]
+    S6 --> S7["7 Disburse"]
+    S4 -.-> S8["8 Reject"]
+    S4 -.-> S9["9 Pre-Approved"]
+    S6 -.-> S24["24 Manual"]
+    </pre>
+  </section>
+
+  <section id="ome-new">
+    <h2>3. Card — One Month EMI (new user)</h2>
+    <pre class="mermaid">
+flowchart TD
+    A[Select Card] --> B[Form PAN KYC]
+    B --> C[CIBIL]
+    C --> D{Soft offer}
+    D -->|fee paid| E[Stage 38 dummy 20k]
+    D -->|income step| F[fatakcard_model early]
+    E --> G[Full Decision Engine]
+    F --> G
+    G --> H{Band R1-R8?}
+    H -->|yes| I[Limit 5k to 7.5k]
+    H -->|no| R8[REJECT 8]
+    H -->|API fail| P9[PRE-APPROVED 9]
+    I --> J[Rules NBFC]
+    J --> K[Offer 4]
+    K --> L[Disburse 7]
+    </pre>
+  </section>
+
+  <section id="ome-repeat">
+    <h2>4. Card — One Month EMI (repeat activation)</h2>
+    <pre class="mermaid">
+flowchart TD
+    A[Disbursed offer] --> B[Activate monthly loan]
+    B --> C[fatakcash_repeat_model]
+    C --> D{DPD yesterday}
+    D -->|le 3| E[CLI increase]
+    D -->|ge 4 D2C| F[CLD block]
+    D -->|B2B| G[Skip CLD]
+    E --> H[Monthly loan record]
+    H --> I{R1-R7 cross-sell?}
+    I -->|yes| J[EMI 290 reactivation]
+    I -->|no| K[Continue card]
+    </pre>
+  </section>
+
+  <section id="dcl">
+    <h2>5. Card — DCL (B2B)</h2>
+    <pre class="mermaid">
+flowchart TD
+    A[B2B employee] --> B[Black Box API]
+    B --> C[Limit from score map]
+    C --> D[Offer Proposed]
+    D --> E{Conv fee check}
+    E -->|D2C 300-800| F[Disburse]
+    E -->|out of range| M[Manual 24]
+    F --> G[KFS-DCL]
+    </pre>
+  </section>
+
+  <section id="ewa">
+    <h2>6. Card — EWA</h2>
+    <pre class="mermaid">
+flowchart TD
+    A[EWA corporate mapping] --> B[offer_type EWA]
+    B --> C[Limit = percent x salary]
+    C --> D[Disburse]
+    D --> E[EWATransactionLimit]
+    E --> F[Attendance daily job]
+    F --> G{amount_earned?}
+    G -->|yes| H[Spend earned only]
+    G -->|no| P9[PRE-APPROVED]
+    </pre>
+  </section>
+
+  <section id="dnc">
+    <h2>7. Card — D&amp;C (inactive new / existing users)</h2>
+    <pre class="mermaid">
+flowchart TD
+    A[D and C offer] --> B["sanction = limit x tenure"]
+    B --> C[remaining pool]
+    C --> D[Monthly draw]
+    D --> E{Active child?}
+    E -->|yes| X[Block]
+    E -->|no| F[PF once + AMC renewals]
+    F --> G{child ge 5?}
+    G -->|yes| H[EMI cross-sell]
+    </pre>
+  </section>
+
+  <section id="lite">
+    <h2>8. EMI — FatakLite</h2>
+    <pre class="mermaid">
+flowchart TD
+    A[EMI app] --> B[CIBIL]
+    B --> C[emi_non_banking_model]
+    C --> D{Band ok?}
+    D -->|yes| E[Income ge 15k]
+    D -->|no| R8[REJECT]
+    E --> F[CIBIL x Income matrix]
+    F --> G[Offer Disburse]
+    </pre>
+  </section>
+
+  <section id="plus">
+    <h2>9. EMI — FatakPlus</h2>
+    <pre class="mermaid">
+flowchart TD
+    A[276 341 336] --> B[Bank AA]
+    B --> C[emi_with_banking_model]
+    C --> D{R1 R2 R3?}
+    D -->|yes| E[Amount tenure from model]
+    D -->|no| R8[REJECT]
+    E --> F{336 verified income?}
+    F --> G[NBFC Disburse]
+    </pre>
+  </section>
+
+  <section id="prime">
+    <h2>10. EMI — FatakPrime (DSA)</h2>
+    <pre class="mermaid">
+flowchart TD
+    A[DSA 285 221] --> B[CIBIL Bank]
+    B --> C{Prime engine}
+    C -->|pass| D[Prime offer]
+    C -->|fail| E{Plus engine}
+    E -->|pass| F[Plus fallback]
+    E -->|fail| R8[REJECT]
+    D --> G[FOIR caps Disburse]
+    F --> G
+    </pre>
+  </section>
+
+  <section id="udaan">
+    <h2>11. EMI — FatakUdaan</h2>
+    <pre class="mermaid">
+flowchart TD
+    A[Eligible reject or CIBIL lt 600] --> B[Program fee]
+    B --> C[CIBIL PAN name]
+    C --> D[Config offer no model]
+    D --> E[Offer 4 Disburse 7]
+    </pre>
+  </section>
+
+  <section id="cross">
+    <h2>12. Card reject → Udaan</h2>
+    <pre class="mermaid">
+flowchart LR
+    DE[Card DE] -->|REJECT| F{show_udaan?}
+    F -->|yes| U[Udaan entry]
+    F -->|no| END[End]
+    U --> FEE[Program fee]
+    FEE --> OFF[Config STPL]
+    </pre>
+  </section>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      flowchart: { curve: 'basis', padding: 16 },
+      securityLevel: 'loose'
+    });
+  </script>
+</body>
+</html>
